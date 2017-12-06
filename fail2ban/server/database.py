@@ -129,12 +129,16 @@ class Fail2BanDb(object):
     __version__ = 2
     # Note all _TABLE_* strings must end in ';' for py26 compatibility
     _TABLE_fail2banDb = "CREATE TABLE fail2banDb(version INTEGER);"
-    _TABLE_jails = "CREATE TABLE jails(" \
+
+    _TABLE_jails = \
+            "CREATE TABLE jails(" \
             "name TEXT NOT NULL UNIQUE, " \
             "enabled INTEGER NOT NULL DEFAULT 1" \
             ");" \
             "CREATE INDEX jails_name ON jails(name);"
-    _TABLE_logs = "CREATE TABLE logs(" \
+
+    _TABLE_logs = \
+            "CREATE TABLE logs(" \
             "jail TEXT NOT NULL, " \
             "path TEXT, " \
             "firstlinemd5 TEXT, " \
@@ -149,7 +153,9 @@ class Fail2BanDb(object):
             #"journalmatch TEXT, " \
             #"journlcursor TEXT, " \
             #"lastfiletime INTEGER DEFAULT 0, " # is this easily available \
-    _TABLE_bans = "CREATE TABLE bans(" \
+
+    _TABLE_bans = \
+            "CREATE TABLE bans(" \
             "jail TEXT NOT NULL, " \
             "ip TEXT, " \
             "timeofban INTEGER NOT NULL, " \
@@ -159,7 +165,17 @@ class Fail2BanDb(object):
             "CREATE INDEX bans_jail_timeofban_ip ON bans(jail, timeofban);" \
             "CREATE INDEX bans_jail_ip ON bans(jail, ip);" \
             "CREATE INDEX bans_ip ON bans(ip);" \
-    
+
+    __ng_version__ = 1
+    _ngTABLE_version = "CREATE TABLE ngVersion(version INTEGER);"
+    _ngTABLE_locations = \
+            "CREATE TABLE locations(" \
+            "  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT" \
+            ", code TEXT NOT NULL UNIQUE" \
+            ", name TEXT" \
+            ", banscount INTEGER NOT NULL DEFAULT 0" \
+            ");" \
+            "CREATE INDEX locations_code ON locations(code);"
 
     def __init__(self, filename, purgeAge=24*60*60):
         self.maxEntries = 50
@@ -200,27 +216,57 @@ class Fail2BanDb(object):
         cur.execute("PRAGMA temp_store = MEMORY")
 
         try:
-            cur.execute("SELECT version FROM fail2banDb LIMIT 1")
-        except sqlite3.OperationalError:
-            logSys.warning("New database created. Version '%i'",
-                self.createDb())
-        else:
-            version = cur.fetchone()[0]
-            if version < Fail2BanDb.__version__:
-                newversion = self.updateDb(version)
-                if newversion == Fail2BanDb.__version__:
-                    logSys.warning( "Database updated from '%i' to '%i'",
-                        version, newversion)
-                else: # pragma: no cover
-                    logSys.error( "Database update failed to achieve version '%i'"
-                        ": updated from '%i' to '%i'",
-                        Fail2BanDb.__version__, version, newversion)
-                    raise RuntimeError('Failed to fully update')
+            self.createOrUpdateFail2BanDb(cur)
+            self.createOrUpdateNgTables(cur)
         finally:
             # pypy: set journal mode after possible upgrade db:
             if pypy:
                 cur.execute("PRAGMA journal_mode = MEMORY")
             cur.close()
+
+    def createOrUpdateFail2BanDb(self, cur):
+        self.createOrUpdateDb(cur, "fail2banDb", Fail2BanDb.__version__,
+                              self.createDb, self.updateDb)
+
+    def createOrUpdateNgTables(self, cur):
+        self.createOrUpdateDb(cur, "ngVersion", Fail2BanDb.__ng_version__,
+                              self.createNgTables, self.updateNgTables)
+
+    def createOrUpdateDb(self, cur, versionTable, targetVersion, createFunc, updateFunc):
+        try:
+            cur.execute("SELECT version FROM ? LIMIT 1",(versionTable,))
+        except sqlite3.OperationalError:
+            logSys.warning(
+                "New database (%s) created. Version '%i'", versionTable, createFunc())
+        else:
+            version = cur.fetchone()[0]
+            if version < targetVersion:
+                newversion = updateFunc(version)
+                if newversion == targetVersion:
+                    logSys.warning(
+                        "Database (%s) updated from '%i' to '%i'", versionTable,
+                        version, newversion)
+                else:  # pragma: no cover
+                    logSys.error(
+                        "Database (%s) update failed to achieve version '%i'"
+                        ": updated from '%i' to '%i'", versionTable, targetVersion, version, newversion)
+                    raise RuntimeError('Failed to fully update')
+
+    @commitandrollback
+    def createNgTables(self, cur):
+        cur.executescript(Fail2BanDb._ngTABLE_version)
+        cur.execute("INSERT INTO ngVersion(version) VALUES(?)",
+                    (Fail2BanDb.__ng_version__,))
+
+        cur.executescript(Fail2BanDb._ngTABLE_locations)
+
+        cur.execute("SELECT version FROM ngVersion LIMIT 1")
+        return cur.fetchone()[0]
+
+    @commitandrollback
+    def updateNgTables(self, cur, version):
+        # for future use
+        pass
 
     def close(self):
         logSys.debug("Close connection to database ...")
@@ -630,3 +676,15 @@ class Fail2BanDb(object):
             "DELETE FROM jails WHERE enabled = 0 "
                 "AND NOT EXISTS(SELECT * FROM bans WHERE jail = jails.name)")
 
+    @commitandrollback
+    def incrLocationBans(self, cur, code, name=None, incrValue=1):
+        cur.execute("SELECT id FROM locations WHERE code=?",(code,))
+        if cur.fetchone() == None:
+            if name == None:
+                cur.execute(
+                    "INSERT INTO locations(code) VALUES (?)", (code,))
+            else:
+                cur.execute(
+                    "INSERT INTO locations(code,name) VALUES (?,?)", (code,name,))
+
+        cur.execute("UPDATE locations SET banscount=banscount+? WHERE code = ?", (incrValue,code,))
