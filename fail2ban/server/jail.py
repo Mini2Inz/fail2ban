@@ -29,6 +29,7 @@ import Queue
 from .actions import Actions
 from ..client.jailreader import JailReader
 from ..helpers import getLogger, MyTime
+from .utils import Utils
 
 # Gets the instance of the logger.
 logSys = getLogger(__name__)
@@ -196,6 +197,7 @@ class Jail(object):
         self.__queue.put(ticket)
         if not ticket.restored and self.database is not None:
             self.database.addBan(self, ticket)
+            self.updateLocations(ticket)
 
     def getFailTicket(self):
         """Get a fail ticket from the jail.
@@ -268,3 +270,24 @@ class Jail(object):
         """Check jail "isAlive" by checking filter and actions threads.
         """
         return self.filter.isAlive() or self.actions.isAlive()
+
+    def updateLocations(self, ticket):
+        result, stdout, stderr, retcode = \
+            Utils.executeCmd("geoiplookup {}".format(str(ticket.getIP())), output=True)
+
+        if result:
+            output = None
+            try:
+                # stdout from a command is an instance of bytes class
+                # decode returns string (example: 'GeoIP Country Edition: US, United States\n')
+                # [:-1] is to trim the \n char
+                output = stdout.decode('utf-8')[:-1].split(': ')[1].split(', ')
+            except Exception as ex:
+                logSys.error(
+                    "Failed to parse geoiplookup output: {}\nError: {}".format(str(stdout), str(ex)))
+
+            if output is not None:
+                if output[0] == "IP Address not found":
+                    output[0] = "OTHER"
+                    output.append(None)
+                self.database.incrLocationBans(output[0], output[1])
