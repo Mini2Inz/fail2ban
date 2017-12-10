@@ -196,8 +196,15 @@ class Jail(object):
         """
         self.__queue.put(ticket)
         if not ticket.restored and self.database is not None:
+            code, name = self.getCountryCode(ticket)
+            logSys.debug('[%s] Get ticket for %s from location %s', \
+                self.__name, ticket.getIP(), code or 'unknown')
+            car = self.database.getCountryAggressionRatio(code)
+            logSys.debug('[%s] Location %s has Country Aggression Ratio = %f', \
+                self.__name, code or 'unknown', car);
             self.database.addBan(self, ticket)
-            self.updateLocations(ticket)
+            if code:
+                self.database.incrLocationBans(code, name)
 
     def getFailTicket(self):
         """Get a fail ticket from the jail.
@@ -271,23 +278,26 @@ class Jail(object):
         """
         return self.filter.isAlive() or self.actions.isAlive()
 
-    def updateLocations(self, ticket):
+    def getCountryCode(self, ticket):
         result, stdout, stderr, retcode = \
             Utils.executeCmd("geoiplookup {}".format(str(ticket.getIP())), output=True)
 
-        if result:
-            output = None
-            try:
-                # stdout from a command is an instance of bytes class
-                # decode returns string (example: 'GeoIP Country Edition: US, United States\n')
-                # [:-1] is to trim the \n char
-                output = stdout.decode('utf-8')[:-1].split(': ')[1].split(', ')
-            except Exception as ex:
-                logSys.error(
-                    "Failed to parse geoiplookup output: {}\nError: {}".format(str(stdout), str(ex)))
+        if not result:
+            return None, None
 
-            if output is not None:
-                if output[0] == "IP Address not found":
-                    output[0] = "OTHER"
-                    output.append(None)
-                self.database.incrLocationBans(output[0], output[1])
+        try:
+            # stdout from a command is an instance of bytes class
+            # decode returns string (example: 'GeoIP Country Edition: US, United States\n')
+            # [:-1] is to trim the \n char
+            output = stdout.decode('utf-8')
+            if not output:
+                return None, None
+            tokens = output[:-1].split(': ')[1].split(', ', 2)
+            if tokens[0] == "IP Address not found":
+                return None, None
+            else:
+                return tokens
+
+        except Exception as ex:
+            logSys.error(
+                "Failed to parse geoiplookup output: {}\nError: {}".format(str(stdout), str(ex)))
