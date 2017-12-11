@@ -86,9 +86,12 @@ class BadIpsIncrBanTime(ActionBase):
             messages = self.toJson(response)
             self._logSys.debug("Response from badips.com '%s'", messages['suc'])
             if messages['Listed'] == True:
-                banTime = self._jail.actions.getBanTime() + self.time_increment
+                ticket = aInfo['ticket']
+                banTime = ticket.getBanTime()
+                if banTime is None: banTime = self._jail.actions.getBanTime()
+                banTime += self.time_increment
                 self._logSys.debug("Increase ban time for %s to %i", aInfo['ip'], banTime)
-                self._jail.actions.setBanTime(banTime)
+                ticket.setBanTime(banTime)
 
     def start(self):
         self._logSys.debug("BadIpsIncrBanTime action started for %s", self._jail.name)
