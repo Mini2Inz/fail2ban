@@ -202,6 +202,10 @@ class Jail(object):
             car = self.database.getCountryAggressionRatio(code)
             logSys.debug('[%s] Location %s has Country Aggression Ratio = %f', \
                 self.__name, code or 'unknown', car);
+            if car > 1:
+                bantime = self.actions.getBanTime() * car
+                logSys.debug('[%s] Extended bantime = %d s', self.__name, bantime)
+                ticket.setBanTime(bantime)
             self.database.addBan(self, ticket)
             if code:
                 self.database.incrLocationBans(code, name)
