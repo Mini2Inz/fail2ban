@@ -159,6 +159,7 @@ class Fail2BanDb(object):
             "jail TEXT NOT NULL, " \
             "ip TEXT, " \
             "timeofban INTEGER NOT NULL, " \
+            "bantime INTEGER, " \
             "data JSON, " \
             "FOREIGN KEY(jail) REFERENCES jails(name) " \
             ");" \
@@ -491,9 +492,23 @@ class Fail2BanDb(object):
             pass
         #TODO: Implement data parts once arbitrary match keys completed
         cur.execute(
-            "INSERT INTO bans(jail, ip, timeofban, data) VALUES(?, ?, ?, ?)",
-            (jail.name, ip, int(round(ticket.getTime())),
-                ticket.getData()))
+            """
+                INSERT INTO bans(
+                    jail,
+                    ip,
+                    timeofban,
+                    bantime,
+                    data
+                ) VALUES(?, ?, ?, ?, ?)
+            """,
+            (
+                jail.name,
+                ip,
+                int(round(ticket.getTime())),
+                int(ticket.getBanTime()) if ticket.getBanTime() is not None else None,
+                ticket.getData()
+            )
+        )
 
     @commitandrollback
     def delBan(self, cur, jail, ip):
