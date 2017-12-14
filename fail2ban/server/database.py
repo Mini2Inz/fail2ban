@@ -159,6 +159,7 @@ class Fail2BanDb(object):
             "jail TEXT NOT NULL, " \
             "ip TEXT, " \
             "timeofban INTEGER NOT NULL, " \
+            "bantime INTEGER, " \
             "data JSON, " \
             "FOREIGN KEY(jail) REFERENCES jails(name) " \
             ");" \
@@ -491,9 +492,23 @@ class Fail2BanDb(object):
             pass
         #TODO: Implement data parts once arbitrary match keys completed
         cur.execute(
-            "INSERT INTO bans(jail, ip, timeofban, data) VALUES(?, ?, ?, ?)",
-            (jail.name, ip, int(round(ticket.getTime())),
-                ticket.getData()))
+            """
+                INSERT INTO bans(
+                    jail,
+                    ip,
+                    timeofban,
+                    bantime,
+                    data
+                ) VALUES(?, ?, ?, ?, ?)
+            """,
+            (
+                jail.name,
+                ip,
+                int(round(ticket.getTime())),
+                int(ticket.getBanTime()) if ticket.getBanTime() is not None else None,
+                ticket.getData()
+            )
+        )
 
     @commitandrollback
     def delBan(self, cur, jail, ip):
@@ -688,3 +703,15 @@ class Fail2BanDb(object):
                     "INSERT INTO locations(code,name) VALUES (?,?)", (code,name,))
 
         cur.execute("UPDATE locations SET banscount=banscount+? WHERE code = ?", (incrValue,code,))
+
+    @commitandrollback
+    def getCountryAggressionRatio(self, cur, code):
+        # Get number of bans for country with given code
+        cur.execute("SELECT banscount FROM locations WHERE code = ?", (code,))
+        res = cur.fetchone()
+        count = res[0] if res else 0
+        # Get average number of bans
+        cur.execute("SELECT avg(banscount) FROM locations")
+        avg = cur.fetchone()[0] or 1
+        # Calculate and return ratio
+        return count / avg
