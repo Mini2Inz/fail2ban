@@ -181,7 +181,7 @@ class Fail2BanDb(object):
 				filename, e.args[0])
 			raise
 
-		# differentiate pypy: switch journal mode later (save it during the upgrade), 
+		# differentiate pypy: switch journal mode later (save it during the upgrade),
 		# to prevent errors like "database table is locked":
 		try:
 			import __pypy__
@@ -462,7 +462,7 @@ class Fail2BanDb(object):
 		"""
 		queryArgs = (jail.name, str(ip));
 		cur.execute(
-			"DELETE FROM bans WHERE jail = ? AND ip = ?", 
+			"DELETE FROM bans WHERE jail = ? AND ip = ?",
 			queryArgs);
 
 	@commitandrollback
@@ -606,7 +606,7 @@ class Fail2BanDb(object):
 		ticket = None
 
 		with self._lock:
-			results = list(self._getCurrentBans(self._db.cursor(), 
+			results = list(self._getCurrentBans(self._db.cursor(),
 				jail=jail, ip=ip, forbantime=forbantime, fromtime=fromtime))
 
 		if results:
@@ -630,3 +630,13 @@ class Fail2BanDb(object):
 			"DELETE FROM jails WHERE enabled = 0 "
 				"AND NOT EXISTS(SELECT * FROM bans WHERE jail = jails.name)")
 
+	@commitandrollback
+	def dumpBans(self, cur):
+		return list(cur.execute("""
+			SELECT
+				jail,
+				ip,
+				timeofban,
+				NULL AS bantime
+			FROM bans
+		"""))

@@ -149,7 +149,7 @@ class Server:
 		# Start the communication
 		logSys.debug("Starting communication")
 		try:
-			self.__shareServer = ShareServer()
+			self.__shareServer = ShareServer(self)
 			self.__asyncServer = AsyncServer(self.__transm)
 			self.__asyncServer.onstart = conf.get('onstart')
 			self.__asyncServer.start(sock, force)

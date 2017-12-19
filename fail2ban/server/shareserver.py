@@ -3,6 +3,7 @@ __copyright__ = "Copyright (c) 2017 Radosław Dąbrowski"
 __license__   = "GPL"
 
 import socket, asyncore, asynchat
+import shlex
 from ..helpers import getLogger
 
 ADDR    = ''
@@ -17,10 +18,18 @@ logSys = getLogger(__name__)
 #   - asynchat.async_chat: https://docs.python.org/2/library/asynchat.html#module-asynchat
 
 
+def xstr(x):
+    if x is None:
+        return ''
+    else:
+        return str(x)
+
+
 class ShareServer(asyncore.dispatcher):
 
-    def __init__(self, addr = ADDR, port = PORT, backlog = BACKLOG):
+    def __init__(self, server, addr = ADDR, port = PORT, backlog = BACKLOG):
         asyncore.dispatcher.__init__(self)
+        self._server = server
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         self.bind((addr, port))
@@ -32,13 +41,14 @@ class ShareServer(asyncore.dispatcher):
         if client is not None:
             sock, (addr, port) = client
             logSys.debug("Incoming connection from %s:%d", addr, port)
-            handler = CommandHandler(sock, addr, port)
+            handler = CommandHandler(self._server, sock, addr, port)
 
 
 class CommandHandler(asynchat.async_chat):
 
-    def __init__(self, sock, addr, port):
+    def __init__(self, server, sock, addr, port):
         asynchat.async_chat.__init__(self, sock=sock)
+        self._server = server
         self._addr = addr
         self._port = port
         self._buffer = []
@@ -53,3 +63,26 @@ class CommandHandler(asynchat.async_chat):
         self._buffer = []
         logSys.debug("Received message from %s:%d: %s", \
             self._addr, self._port, msg)
+        tokens = shlex.split(msg)
+        cmd, args = tokens[0], tokens[1:]
+        logSys.debug("Command %s with arguments: %s", \
+            cmd, ", ".join(args))
+        if cmd == "BANIP":
+            self._recv_ban(args)
+        elif cmd == "BANS":
+            self._send_bans(args)
+        elif cmd == "LOCATIONS":
+            self._send_locations(args)
+        else:
+            self.push("Unknown command {}\n".format(cmd))
+
+    def _recv_ban(self, args):
+        self.push("Not implemented yet. Sorry...\n")
+
+    def _send_bans(self, args):
+        bans = self._server.getDatabase().dumpBans()
+        for ban in bans:
+            self.push(",".join(map(xstr, ban)) + "\n")
+
+    def _send_locations(self, args):
+        self.push("Not implemented yet. Sorry...\n")
