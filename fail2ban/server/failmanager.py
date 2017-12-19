@@ -59,10 +59,6 @@ class FailManager:
 		with self.__lock:
 			return len(self.__failList), sum([f.getRetry() for f in self.__failList.values()])
 
-	def getFailTotal(self):
-		with self.__lock:
-			return self.__failTotal
-
 	def setMaxRetry(self, value):
 		self.__maxRetry = value
 	
@@ -84,13 +80,16 @@ class FailManager:
 				# if the same object - the same matches but +1 attempt:
 				if fData is ticket:
 					matches = None
+					users = None
 					attempt = 1
 				else:
 					# will be incremented / extended (be sure we have at least +1 attempt):
 					matches = ticket.getMatches()
+					users = ticket.getUsers()
 					attempt = ticket.getAttempt()
 					if attempt <= 0:
 						attempt += 1
+
 				unixTime = ticket.getTime()
 				fData.setLastTime(unixTime)
 				if fData.getLastReset() < unixTime - self.__maxTime:
@@ -101,10 +100,14 @@ class FailManager:
 				matches = fData.getMatches()
 				if len(matches) > self.maxEntries:
 					fData.setMatches(matches[-self.maxEntries:])
+
+				if users:
+					fData.updateUsers(users)
+
 			except KeyError:
 				# if already FailTicket - add it direct, otherwise create (using copy all ticket data):
 				if isinstance(ticket, FailTicket):
-					fData = ticket;
+					fData = ticket
 				else:
 					fData = FailTicket(ticket=ticket)
 				if count > ticket.getAttempt():

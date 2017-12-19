@@ -113,7 +113,7 @@ class Ticket(object):
 		return self._banCount;
 
 	def getEndOfBanTime(self, defaultBT=None):
-		bantime = (self._banTime if self._banTime is not None else defaultBT)
+		bantime = self.getBanTime(defaultBT)
 		# permanent
 		if bantime == -1:
 			return Ticket.MAX_TIME
@@ -206,6 +206,7 @@ class FailTicket(Ticket):
 	def __init__(self, ip=None, time=None, matches=None, data={}, ticket=None):
 		# this class variables:
 		self.__retry = 0
+		self._users = []
 		self.__lastReset = None
 		# create/copy using default ticket constructor:
 		Ticket.__init__(self, ip, time, matches, data, ticket)
@@ -213,7 +214,7 @@ class FailTicket(Ticket):
 		if ticket is None:
 			self.__lastReset = time if time is not None else self.getTime()
 		if not self.__retry:
-			self.__retry = self._data['failures'];
+			self.__retry = self._data['failures']
 
 	def setRetry(self, value):
 		""" Set artificial retry count, normally equal failures / attempt,
@@ -254,6 +255,25 @@ class FailTicket(Ticket):
 
 	def setLastReset(self, value):
 		self.__lastReset = value
+
+	def initUsers(self):
+		if len(self._users) == 0 and self._data.has_key('user'):
+			self._users.append(self._data['user'])
+
+	def getUsers(self):
+		self.initUsers()
+		return self._users
+
+	def updateUsers(self, users):
+		self.initUsers()
+		newUsers = []
+		for user in users:
+			if user not in self._users:
+				newUsers.append(user)
+
+		if newUsers:
+			self._users = self._users + newUsers
+			self._data['users'] = self._users
 
 ##
 # Ban Ticket.

@@ -505,7 +505,7 @@ class Fail2BanDb(object):
                 jail.name,
                 ip,
                 int(round(ticket.getTime())),
-                int(ticket.getBanTime()) if ticket.getBanTime() is not None else None,
+                int(ticket.getBanTime(jail.actions.getBanTime())),
                 ticket.getData()
             )
         )
