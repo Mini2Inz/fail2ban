@@ -86,4 +86,7 @@ class CommandHandler(asynchat.async_chat):
         self.push("\n")
 
     def _send_locations(self, args):
-        self.push("Not implemented yet. Sorry...\n\n")
+        locations = self._server.getDatabase().dumpLocations()
+        for loc in locations:
+            self.push(",".join(map(xstr, loc)) + "\n")
+        self.push("\n")

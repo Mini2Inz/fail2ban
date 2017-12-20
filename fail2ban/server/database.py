@@ -726,3 +726,13 @@ class Fail2BanDb(object):
                 bantime
             FROM bans
         """))
+
+    @commitandrollback
+    def dumpLocations(self, cur):
+        return list(cur.execute("""
+            SELECT
+                code,
+                name,
+                banscount
+            FROM locations
+        """))
