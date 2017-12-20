@@ -189,17 +189,17 @@ class Actions(JailThread, Mapping):
 	# Set the ban time.
 	#
 	# @param value the time
-	
+
 	def setBanTime(self, value):
 		value = MyTime.str2seconds(value)
 		self.__banManager.setBanTime(value)
 		logSys.info("  banTime: %s" % value)
-	
+
 	##
 	# Get the ban time.
 	#
 	# @return the time
-	
+
 	def getBanTime(self):
 		return self.__banManager.getBanTime()
 
@@ -281,7 +281,7 @@ class Actions(JailThread, Mapping):
 				continue
 			if not Utils.wait_for(lambda: not self.active or self.__checkBan(), self.sleeptime):
 				self.__checkUnBan()
-		
+
 		self.__flushBan()
 		self.stopActions()
 		return True
@@ -289,6 +289,7 @@ class Actions(JailThread, Mapping):
 	class ActionInfo(CallingMap):
 
 		AI_DICT = {
+            "ticket": lambda self: self.__ticket,
 			"ip":				lambda self: self.__ticket.getIP(),
 			"family":   lambda self: self['ip'].familyStr,
 			"ip-rev":		lambda self: self['ip'].getPTR(''),
@@ -316,7 +317,8 @@ class Actions(JailThread, Mapping):
 			self.storage = dict()
 			self.immutable = immutable
 			self.data = data
-		
+
+
 		def copy(self): # pargma: no cover
 			return self.__class__(self.__ticket, self.__jail, self.immutable, self.data.copy())
 
@@ -420,7 +422,7 @@ class Actions(JailThread, Mapping):
 					else logging.WARNING
 					logSys.log(ll, "[%s] %s already banned", self._jail.name, ip)
 		if cnt:
-			logSys.debug("Banned %s / %s, %s ticket(s) in %r", cnt, 
+			logSys.debug("Banned %s / %s, %s ticket(s) in %r", cnt,
 				self.__banManager.getBanTotal(), self.__banManager.size(), self._jail.name)
 		return cnt
 
@@ -434,7 +436,7 @@ class Actions(JailThread, Mapping):
 			self.__unBan(ticket)
 		cnt = len(lst)
 		if cnt:
-			logSys.debug("Unbanned %s, %s ticket(s) in %r", 
+			logSys.debug("Unbanned %s, %s ticket(s) in %r",
 				cnt, self.__banManager.size(), self._jail.name)
 		return cnt
 
@@ -472,7 +474,7 @@ class Actions(JailThread, Mapping):
 			# unban ip:
 			self.__unBan(ticket, actions=actions, log=log)
 			cnt += 1
-		logSys.debug("Unbanned %s, %s ticket(s) in %r", 
+		logSys.debug("Unbanned %s, %s ticket(s) in %r",
 			cnt, self.__banManager.size(), self._jail.name)
 		return cnt
 
