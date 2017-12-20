@@ -723,6 +723,6 @@ class Fail2BanDb(object):
                 jail,
                 ip,
                 timeofban,
-                NULL AS bantime
+                bantime
             FROM bans
         """))
