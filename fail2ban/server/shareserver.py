@@ -74,15 +74,16 @@ class CommandHandler(asynchat.async_chat):
         elif cmd == "LOCATIONS":
             self._send_locations(args)
         else:
-            self.push("Unknown command {}\n".format(cmd))
+            self.push("Unknown command {}\n\n".format(cmd))
 
     def _recv_ban(self, args):
-        self.push("Not implemented yet. Sorry...\n")
+        self.push("Not implemented yet. Sorry...\n\n")
 
     def _send_bans(self, args):
         bans = self._server.getDatabase().dumpBans()
         for ban in bans:
             self.push(",".join(map(xstr, ban)) + "\n")
+        self.push("\n")
 
     def _send_locations(self, args):
-        self.push("Not implemented yet. Sorry...\n")
+        self.push("Not implemented yet. Sorry...\n\n")
