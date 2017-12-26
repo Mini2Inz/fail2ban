@@ -5,6 +5,7 @@ __license__   = "GPL"
 import socket, asyncore, asynchat
 import shlex
 from ..helpers import getLogger
+from ticket import Ticket
 
 ADDR    = ''
 PORT    = 1234
@@ -77,7 +78,27 @@ class CommandHandler(asynchat.async_chat):
             self.push("Unknown command {}\n\n".format(cmd))
 
     def _recv_ban(self, args):
-        self.push("Not implemented yet. Sorry...\n\n")
+        # Parse args
+        if (len(args) == 3):
+            jailname, ip, timeofban = args
+        elif (len(args) == 4):
+            jailname, ip, timeofban, bantime = args
+        else:
+            self.push("Incorrect arguments.\n")
+            self.push("Usage: BANIP <jail> <ip> <timeofban> [bantime]\n\n")
+            return
+        # Create ticket
+        ticket = Ticket(ip, float(timeofban))
+        ticket.setBanTime(bantime)
+        # Put ticket into a jail
+        if self._server.getJails().exists(jailname):
+            logSys.debug("Putting ticket into the jail %s...", jailname)
+            jail = self._server.getJails()[jailname]
+            jail.putFailTicket(ticket)
+        else:
+            logSys.debug("No jail %s found. Ignoring...", jailname)
+        # Send empty response
+        self.push("\n")
 
     def _send_bans(self, args):
         bans = self._server.getDatabase().dumpBans()

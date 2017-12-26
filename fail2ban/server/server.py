@@ -196,6 +196,9 @@ class Server:
 		# Prevent to call quit twice:
 		self.quit = lambda: False
 
+	def getJails(self):
+		return self.__jails
+
 	def addJail(self, name, backend):
 		addflg = True
 		if self.__reload_state.get(name) and self.__jails.exists(name):
