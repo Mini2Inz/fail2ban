@@ -46,6 +46,7 @@ class ShareServer(asyncore.dispatcher):
 
     def shareTicket(self, jail, ticket):
         logSys.debug("Sharing ticket %s from jail %s...", ticket.getIP(), jail)
+        client = ShareClient(jail, ticket, "172.17.0.1")
 
 class CommandHandler(asynchat.async_chat):
 
@@ -115,3 +116,27 @@ class CommandHandler(asynchat.async_chat):
         for loc in locations:
             self.push(",".join(map(xstr, loc)) + "\n")
         self.push("\n")
+
+
+class ShareClient(asyncore.dispatcher):
+
+    def __init__(self, jail, ticket, addr, port = PORT):
+        asyncore.dispatcher.__init__(self)
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connect((addr, port))
+        self.buffer = "BANIP {} {} {} {}\n".format(
+            jail, ticket.getIP(), ticket.getTime(),
+            ticket.getBanTime() if ticket.getBanTime() is not None else "")
+
+    def handle_connect(self):
+        pass
+
+    def handle_close(self):
+        self.close()
+
+    def writable(self):
+        return (len(self.buffer) > 0)
+
+    def handle_write(self):
+        sent = self.send(self.buffer)
+        self.buffer = self.buffer[sent:]
