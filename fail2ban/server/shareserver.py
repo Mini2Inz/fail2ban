@@ -81,6 +81,7 @@ class CommandHandler(asynchat.async_chat):
         # Parse args
         if (len(args) == 3):
             jailname, ip, timeofban = args
+            bantime = None
         elif (len(args) == 4):
             jailname, ip, timeofban, bantime = args
         else:
@@ -89,7 +90,8 @@ class CommandHandler(asynchat.async_chat):
             return
         # Create ticket
         ticket = Ticket(ip, float(timeofban))
-        ticket.setBanTime(bantime)
+        if (bantime is not None):
+            ticket.setBanTime(bantime)
         # Put ticket into a jail
         if self._server.getJails().exists(jailname):
             logSys.debug("Putting ticket into the jail %s...", jailname)
