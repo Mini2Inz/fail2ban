@@ -215,7 +215,7 @@ class Server:
 				# prevent to start the same jail twice (no reload more - restart):
 				del self.__reload_state[name]
 		if addflg:
-			self.__jails.add(name, backend, self.__db)
+			self.__jails.add(name, backend, self.__db, self.__shareServer)
 		if self.__db is not None:
 			self.__db.addJail(self.__jails[name])
 

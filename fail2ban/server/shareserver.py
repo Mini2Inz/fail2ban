@@ -44,6 +44,8 @@ class ShareServer(asyncore.dispatcher):
             logSys.debug("Incoming connection from %s:%d", addr, port)
             handler = CommandHandler(self._server, sock, addr, port)
 
+    def shareTicket(self, jail, ticket):
+        logSys.debug("Sharing ticket %s from jail %s...", ticket.getIP(), jail)
 
 class CommandHandler(asynchat.async_chat):
 

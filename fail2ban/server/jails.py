@@ -42,7 +42,7 @@ class Jails(Mapping):
 		self.__lock = Lock()
 		self._jails = dict()
 
-	def add(self, name, backend, db=None):
+	def add(self, name, backend, db=None, shareServer=None):
 		"""Adds a jail.
 
 		Adds a new jail if not already present which should use the
@@ -67,7 +67,7 @@ class Jails(Mapping):
 				if noduplicates:
 					raise DuplicateJailException(name)
 			else:
-				self._jails[name] = Jail(name, backend, db)
+				self._jails[name] = Jail(name, backend, db, shareServer)
 
 	def exists(self, name):
 		return name in self._jails
