@@ -28,9 +28,10 @@ def xstr(x):
 
 class ShareServer(asyncore.dispatcher):
 
-    def __init__(self, server, addr = ADDR, port = PORT, backlog = BACKLOG):
+    def __init__(self, server, conf, addr = ADDR, port = PORT, backlog = BACKLOG):
         asyncore.dispatcher.__init__(self)
         self._server = server
+        self._conf = conf
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         self.bind((addr, port))
@@ -46,7 +47,11 @@ class ShareServer(asyncore.dispatcher):
 
     def shareTicket(self, jail, ticket):
         logSys.debug("Sharing ticket %s from jail %s...", ticket.getIP(), jail)
-        client = ShareClient(jail, ticket, "172.17.0.1")
+        hosts = self._conf.get("sharehosts")
+        logSys.debug("Sharing with %s...", hosts)
+        for host in shlex.split(hosts):
+            addr, port = host.split(":")
+            client = ShareClient(jail, ticket, addr, port)
 
 class CommandHandler(asynchat.async_chat):
 
