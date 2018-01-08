@@ -2,14 +2,17 @@ __author__    = "Radosław Dąbrowski"
 __copyright__ = "Copyright (c) 2017 Radosław Dąbrowski"
 __license__   = "GPL"
 
+import os
 import socket, asyncore, asynchat
 import shlex
+from pprint import pformat
 from ..helpers import getLogger
 from ticket import Ticket
 
-ADDR    = ''
-PORT    = 1234
-BACKLOG = 5
+HOSTSFILE = "hosts"
+ADDR      = ""
+PORT      = 1234
+BACKLOG   = 5
 
 # Gets the instance of the logger.
 logSys = getLogger(__name__)
@@ -32,11 +35,26 @@ class ShareServer(asyncore.dispatcher):
         asyncore.dispatcher.__init__(self)
         self._server = server
         self._conf = conf
+        logSys.debug("Received conf:\n%s", pformat(conf))
+        self._hosts = []
+        self.readHosts()
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         self.bind((addr, port))
         self.listen(BACKLOG)
         logSys.debug("ShareServer is listening on %s:%d", addr, port)
+
+    def readHosts(self, filename = HOSTSFILE):
+        filename = os.path.join(self._conf.get("conf"), filename)
+        logSys.debug("Reading hosts from file %s...", filename)
+        with open(filename) as f:
+            for line in f.readlines():
+                try:
+                    addr, port = line.strip().split(":")
+                    self._hosts.append((addr, int(port)))
+                except:
+                    pass
+        logSys.debug("Read hosts:\n%s", pformat(self._hosts))
 
     def handle_accept(self):
         client = self.accept()
@@ -47,11 +65,10 @@ class ShareServer(asyncore.dispatcher):
 
     def shareTicket(self, jail, ticket):
         logSys.debug("Sharing ticket %s from jail %s...", ticket.getIP(), jail)
-        hosts = self._conf.get("sharehosts")
-        logSys.debug("Sharing with %s...", hosts)
-        for host in shlex.split(hosts):
-            addr, port = host.split(":")
+        for host in self._hosts:
+            addr, port = host
             client = ShareClient(jail, ticket, addr, port)
+
 
 class CommandHandler(asynchat.async_chat):
 
