@@ -144,6 +144,8 @@ class ShareClient(asyncore.dispatcher):
 
     def __init__(self, jail, ticket, addr, port = PORT):
         asyncore.dispatcher.__init__(self)
+        self._addr = addr
+        self._port = port
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect((addr, port))
         self.buffer = "BANIP {} {} {} {}\n".format(
@@ -152,6 +154,10 @@ class ShareClient(asyncore.dispatcher):
 
     def handle_connect(self):
         pass
+
+    def handle_error(self):
+        logSys.warning("Error occured while trying to connect to %s:%d", \
+            self._addr, self._port)
 
     def handle_close(self):
         self.close()
