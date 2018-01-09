@@ -115,6 +115,7 @@ class CommandHandler(asynchat.async_chat):
             return
         # Create ticket
         ticket = Ticket(ip, float(timeofban))
+        ticket.external = True
         if (bantime is not None):
             ticket.setBanTime(bantime)
         # Put ticket into a jail

@@ -216,7 +216,8 @@ class Jail(object):
             if code:
                 self.database.incrLocationBans(code, name)
             # Share ticket with others
-            self.__shareServer.shareTicket(self.__name, ticket)
+            if not ticket.external:
+                self.__shareServer.shareTicket(self.__name, ticket)
 
     def getFailTicket(self):
         """Get a fail ticket from the jail.
