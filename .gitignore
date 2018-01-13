@@ -10,3 +10,9 @@ htmlcov
 __pycache__
 .vagrant/
 .idea/
+debug/*.log
+debug/*.sock
+debug/*.pid
+debug/*.sqlite3
+.vscode/settings.json
+fail2ban.egg-info/

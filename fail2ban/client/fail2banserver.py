@@ -235,3 +235,6 @@ def exec_command_line(argv):
 		exit(0)
 	else:
 		exit(-1)
+
+if __name__ == "__main__":
+	exec_command_line(sys.argv)

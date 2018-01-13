@@ -1,6 +1,7 @@
-__author__    = "Radosław Dąbrowski"
-__copyright__ = "Copyright (c) 2017 Radosław Dąbrowski"
-__license__   = "GPL"
+# coding: utf-8
+__author__    = u"Radosław Dąbrowski"
+__copyright__ = u"Copyright (c) 2017 Radosław Dąbrowski"
+__license__   = u"GPL"
 
 import os
 import socket, asyncore, asynchat
