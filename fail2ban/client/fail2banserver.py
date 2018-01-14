@@ -230,6 +230,13 @@ class Fail2banServer(Fail2banCmdLine):
 		exit(code)
 
 def exec_command_line(argv):
+	if argv[1] == "--vsdebug":
+		del argv[1] # remove "vsdebug" from arguments list
+		import ptvsd
+		ptvsd.enable_attach("fail2ban-debug-secret", address=('0.0.0.0', 3000))
+		ptvsd.wait_for_attach()
+		ptvsd.break_into_debugger()
+
 	server = Fail2banServer()
 	if server.start(argv):
 		exit(0)

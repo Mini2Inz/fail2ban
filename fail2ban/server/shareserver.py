@@ -12,7 +12,7 @@ from ticket import Ticket
 
 HOSTSFILE = "hosts"
 ADDR      = ""
-PORT      = 1234
+PORT      = 12345
 BACKLOG   = 5
 
 # Gets the instance of the logger.
@@ -127,7 +127,7 @@ class CommandHandler(asynchat.async_chat):
         else:
             logSys.debug("No jail %s found. Ignoring...", jailname)
         # Send empty response
-        self.push("\n")
+        #self.push("\n")
 
     def _send_bans(self, args):
         bans = self._server.getDatabase().dumpBans()
