@@ -127,7 +127,7 @@ class CommandHandler(asynchat.async_chat):
         else:
             logSys.debug("No jail %s found. Ignoring...", jailname)
         # Send empty response
-        #self.push("\n")
+        self.push("\n")
 
     def _send_bans(self, args):
         bans = self._server.getDatabase().dumpBans()
