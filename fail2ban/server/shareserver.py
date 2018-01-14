@@ -154,14 +154,21 @@ class ShareClient(asyncore.dispatcher):
             ticket.getBanTime() if ticket.getBanTime() is not None else "")
 
     def handle_connect(self):
-        pass
+        logSys.debug("Connected to %s:%d.", \
+            self._addr, self._port)
 
     def handle_error(self):
-        logSys.warning("Error occured while trying to connect to %s:%d", \
+        logSys.warning("Error occured while trying to connect to %s:%d.", \
             self._addr, self._port)
 
     def handle_close(self):
         self.close()
+
+    def handle_read(self):
+        data = self.recv(8192)
+        msg = data.decode('utf-8')
+        logSys.debug("Received response from %s:%d: %s", \
+            self._addr, self._port, msg)
 
     def writable(self):
         return (len(self.buffer) > 0)
