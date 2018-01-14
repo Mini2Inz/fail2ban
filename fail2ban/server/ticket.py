@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 # Author: Cyril Jaquier
-# 
+#
 
 __author__ = "Cyril Jaquier"
 __copyright__ = "Copyright (c) 2004 Cyril Jaquier"
@@ -37,9 +37,10 @@ logSys = getLogger(__name__)
 class Ticket(object):
 
 	MAX_TIME = 0X7FFFFFFFFFFF ;# 4461763-th year
-	
+
 	RESTORED = 0x01
 	BANNED   = 0x08
+	EXTERNAL = 0x10
 
 	def __init__(self, ip=None, time=None, matches=None, data={}, ticket=None):
 		"""Ticket constructor
@@ -84,16 +85,16 @@ class Ticket(object):
 		if isinstance(value, basestring):
 			value = IPAddr(value)
 		self.__ip = value
-	
+
 	def getID(self):
 		return self._data.get('fid', self.__ip)
-	
+
 	def getIP(self):
 		return self.__ip
-	
+
 	def setTime(self, value):
 		self._time = value
-	
+
 	def getTime(self):
 		return self._time
 
@@ -130,7 +131,7 @@ class Ticket(object):
 
 	def setAttempt(self, value):
 		self._data['failures'] = value
-	
+
 	def getAttempt(self):
 		return self._data['failures']
 
@@ -150,7 +151,7 @@ class Ticket(object):
 			self._flags |= Ticket.RESTORED
 		else:
 			self._flags &= ~(Ticket.RESTORED)
-	
+
 	@property
 	def banned(self):
 		return self._flags & Ticket.BANNED
@@ -160,6 +161,16 @@ class Ticket(object):
 			self._flags |= Ticket.BANNED
 		else:
 			self._flags &= ~(Ticket.BANNED)
+
+	@property
+	def external(self):
+		return self._flags & Ticket.EXTERNAL
+	@external.setter
+	def external(self, value):
+		if value:
+			self._flags |= Ticket.EXTERNAL
+		else:
+			self._flags &= ~(Ticket.EXTERNAL)
 
 	def setData(self, *args, **argv):
 		# if overwrite - set data and filter None values:
@@ -178,7 +189,7 @@ class Ticket(object):
 		# todo: if support >= 2.7 only:
 		# self._data = {k:v for k,v in self._data.iteritems() if v is not None}
 		self._data = dict([(k,v) for k,v in self._data.iteritems() if v is not None])
-	
+
 	def getData(self, key=None, default=None):
 		# return whole data dict:
 		if key is None:
@@ -245,7 +256,7 @@ class FailTicket(Ticket):
 	def setLastTime(self, value):
 		if value > self._time:
 			self._time = value
-	
+
 	def getLastTime(self):
 		return self._time
 

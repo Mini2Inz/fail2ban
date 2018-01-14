@@ -1,5 +1,5 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: t -*-
-# vi: set ft=python sts=4 ts=4 sw=4 noet :
+# vi: set ft=python sts=4 ts=4 sw=4 et :
 
 # This file is part of Fail2Ban.
 #
@@ -715,3 +715,24 @@ class Fail2BanDb(object):
         avg = cur.fetchone()[0] or 1
         # Calculate and return ratio
         return count / avg
+
+    @commitandrollback
+    def dumpBans(self, cur):
+        return list(cur.execute("""
+            SELECT
+                jail,
+                ip,
+                timeofban,
+                bantime
+            FROM bans
+        """))
+
+    @commitandrollback
+    def dumpLocations(self, cur):
+        return list(cur.execute("""
+            SELECT
+                code,
+                name,
+                banscount
+            FROM locations
+        """))

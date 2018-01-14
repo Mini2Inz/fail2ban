@@ -67,8 +67,9 @@ class Jail(object):
     #      list had .index until 2.6
     _BACKENDS = ['pyinotify', 'gamin', 'polling', 'systemd']
 
-    def __init__(self, name, backend = "auto", db=None):
+    def __init__(self, name, backend = "auto", db=None, shareServer=None):
         self.__db = db
+        self.__shareServer = shareServer
         # 26 based on iptable chain name limit of 30 less len('f2b-')
         if len(name) >= 26:
             logSys.warning("Jail name %r might be too long and some commands "
@@ -196,19 +197,27 @@ class Jail(object):
         """
         self.__queue.put(ticket)
         if not ticket.restored and self.database is not None:
+            # Identify location
             code, name = self.getCountryCode(ticket)
             logSys.debug('[%s] Get ticket for %s from location %s', \
                 self.__name, ticket.getIP(), code or 'unknown')
+            # Calculate Country Aggression Ratio
             car = self.database.getCountryAggressionRatio(code)
             logSys.debug('[%s] Location %s has Country Aggression Ratio = %f', \
                 self.__name, code or 'unknown', car);
+            # Set extended bantime if needed
             if car > 1:
                 bantime = self.actions.getBanTime() * car
                 logSys.debug('[%s] Extended bantime = %d s', self.__name, bantime)
                 ticket.setBanTime(bantime)
+            # Save ticket in database
             self.database.addBan(self, ticket)
+            # Update location counter
             if code:
                 self.database.incrLocationBans(code, name)
+            # Share ticket with others
+            if not ticket.external:
+                self.__shareServer.shareTicket(self.__name, ticket)
 
     def getFailTicket(self):
         """Get a fail ticket from the jail.
