@@ -129,7 +129,14 @@ class CommandHandler(asynchat.async_chat):
         self.push("\n")
 
     def _send_bans(self, args):
-        bans = self._server.getDatabase().dumpBans()
+        since_bantime = 0
+        if len(args) == 1:
+            try:
+                since_bantime = int(args[0])
+            except ValueError:
+                since_bantime = 0
+
+        bans = self._server.getDatabase().dumpBans(since_bantime)
         for ban in bans:
             self.push(",".join(map(xstr, ban)) + "\n")
         self.push("\n")
