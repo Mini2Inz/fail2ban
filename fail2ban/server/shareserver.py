@@ -117,17 +117,21 @@ class CommandHandler(asynchat.async_chat):
 
     def _recv_ban(self, args):
         # Parse args
-        if (len(args) == 3):
-            jailname, ip, timeofban = args
-            bantime = None
-        elif (len(args) == 4):
-            jailname, ip, timeofban, bantime = args
-        else:
+        try:
+            if (len(args) == 3):
+                jailname, ip, timeofban = args
+                timeofban = float(timeofban)
+                bantime = None
+            else:
+                jailname, ip, timeofban, bantime = args
+                timeofban = float(timeofban)
+                bantime = float(bantime)
+        except:
             self.push("Incorrect arguments.\n")
             self.push("Usage: BANIP <jail> <ip> <timeofban> [bantime]\n\n")
             return
         # Create ticket
-        ticket = Ticket(ip, float(timeofban))
+        ticket = Ticket(ip, timeofban)
         ticket.external = True
         if (bantime is not None):
             ticket.setBanTime(bantime)
