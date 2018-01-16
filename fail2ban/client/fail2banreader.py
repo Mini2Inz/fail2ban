@@ -45,7 +45,9 @@ class Fail2banReader(ConfigReader):
 			["string", "pidfile", "/var/run/fail2ban/fail2ban.pid"],
 			["string", "loglevel", "INFO"],
 			["string", "logtarget", "/var/log/fail2ban.log"],
-			["string", "syslogsocket", "auto"]
+			["string", "syslogsocket", "auto"],
+			["int", "shareport", 7500],
+			["string", "sharehosts", ""]
 		]
 		return ConfigReader.getOptions(self, "Definition", opts)
 	

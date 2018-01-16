@@ -35,7 +35,7 @@ logSys = getLogger("fail2ban")
 def output(s): # pragma: no cover
 	print(s)
 
-CONFIG_PARAMS = ("socket", "pidfile", "logtarget", "loglevel", "syslogsocket",)
+CONFIG_PARAMS = ("socket", "pidfile", "logtarget", "loglevel", "syslogsocket", "shareport", "sharehosts",)
 # Used to signal - we are in test cases (ex: prevents change logging params, log capturing, etc)
 PRODUCTION = True
 

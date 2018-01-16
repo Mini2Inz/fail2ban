@@ -37,24 +37,36 @@ class ShareServer(asyncore.dispatcher):
         self._conf = conf
         logSys.debug("Received conf:\n%s", pformat(conf))
         self._hosts = []
-        self.readHosts()
+        self.readHosts(conf.get('sharehosts'))
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
-        self.bind((addr, port))
+        self._port = conf.get('shareport', port)
+        self.bind((addr, self._port))
         self.listen(BACKLOG)
-        logSys.debug("ShareServer is listening on %s:%d", addr, port)
+        logSys.debug("ShareServer is listening on %s:%d", addr, self._port)
 
-    def readHosts(self, filename = HOSTSFILE):
-        filename = os.path.join(self._conf.get("conf"), filename)
-        logSys.debug("Reading hosts from file %s...", filename)
-        with open(filename) as f:
-            for line in f.readlines():
-                try:
-                    addr, port = line.strip().split(":")
-                    self._hosts.append((addr, int(port)))
-                except:
-                    pass
-        logSys.debug("Read hosts:\n%s", pformat(self._hosts))
+    def readHosts(self, hosts, filename = HOSTSFILE):
+        def add_host(configline):
+            try:
+                addr, port = configline.strip().split(':')
+                self._hosts.append((addr, int(port)))
+            except:
+                logSys.warning("Failed to process line: %s", configline)
+
+        if not hosts:
+            filename = os.path.join(self._conf.get("conf"), filename)
+            logSys.debug("Reading hosts from file %s...", filename)
+            if os.path.isfile(filename):
+                with open(filename) as f:
+                    for line in f.readlines():
+                        add_host(line)
+            else:
+                logSys.warning("No hosts file")
+        else:
+            for host in hosts.split('\n'):
+                add_host(host.strip())
+
+        logSys.debug("Share hosts:\n%s", pformat(self._hosts))
 
     def handle_accept(self):
         client = self.accept()
