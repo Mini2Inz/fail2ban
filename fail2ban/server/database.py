@@ -717,7 +717,7 @@ class Fail2BanDb(object):
         return count / avg
 
     @commitandrollback
-    def dumpBans(self, cur, bantime):
+    def dumpBans(self, cur, timeofban=0):
         bans_query = """
             SELECT
                 jail,
@@ -726,8 +726,8 @@ class Fail2BanDb(object):
                 bantime
             FROM bans"""
 
-        if bantime > 0:
-            return list(cur.execute(bans_query + " WHERE bantime > ?", (bantime,)))
+        if timeofban > 0:
+            return list(cur.execute(bans_query + " WHERE timeofban > ?", (timeofban,)))
 
         return list(cur.execute(bans_query))
 
