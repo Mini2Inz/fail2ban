@@ -52,7 +52,7 @@ class Fail2banCmdLine():
 
 	def resetConf(self):
 		self._conf = {
-		  "async": False,
+			"async": False,
 			"conf": "/etc/fail2ban",
 			"force": False,
 			"background": True,
@@ -170,6 +170,8 @@ class Fail2banCmdLine():
 			elif o in ["-V", "--version"]:
 				self.dispVersion()
 				return True
+			elif o == "--dbfile":
+				self._conf["dbfile"] = opt[1]
 		return None
 
 	def initCmdLine(self, argv):
@@ -186,7 +188,7 @@ class Fail2banCmdLine():
 			try:
 				cmdOpts = 'hc:s:p:xfbdtviqV'
 				cmdLongOpts = ['loglevel=', 'logtarget=', 'syslogsocket=', 'test', 'async',
-					'timeout=', 'str2sec=', 'help', 'version', 'dp', '--dump-pretty']
+					'timeout=', 'str2sec=', 'help', 'version', 'dp', '--dump-pretty', 'dbfile=']
 				optList, self._args = getopt.getopt(self._argv[1:], cmdOpts, cmdLongOpts)
 			except getopt.GetoptError:
 				self.dispUsage()

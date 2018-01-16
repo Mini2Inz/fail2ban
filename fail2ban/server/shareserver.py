@@ -1,6 +1,7 @@
-__author__    = "Radosław Dąbrowski"
-__copyright__ = "Copyright (c) 2017 Radosław Dąbrowski"
-__license__   = "GPL"
+# coding: utf-8
+__author__    = u"Radosław Dąbrowski"
+__copyright__ = u"Copyright (c) 2017 Radosław Dąbrowski"
+__license__   = u"GPL"
 
 import os
 import socket, asyncore, asynchat
@@ -11,7 +12,7 @@ from ticket import Ticket
 
 HOSTSFILE = "hosts"
 ADDR      = ""
-PORT      = 1234
+PORT      = 12345
 BACKLOG   = 5
 
 # Gets the instance of the logger.
