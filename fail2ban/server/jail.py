@@ -78,6 +78,7 @@ class Jail(object):
         self.__name = name
         self.__queue = Queue.Queue()
         self.__filter = None
+        self.__countries = None
         logSys.info("Creating new jail '%s'" % self.name)
         if backend is not None:
             self._setBackend(backend)
@@ -198,7 +199,7 @@ class Jail(object):
         self.__queue.put(ticket)
         if not ticket.restored and self.database is not None:
             # Identify location
-            code, name = self.getCountryCode(ticket)
+            code, name = self.getDemoCountryCode(ticket)
             logSys.debug('[%s] Get ticket for %s from location %s', \
                 self.__name, ticket.getIP(), code or 'unknown')
             # Calculate Country Aggression Ratio
@@ -314,3 +315,28 @@ class Jail(object):
         except Exception as ex:
             logSys.error(
                 "Failed to parse geoiplookup output: {}\nError: {}".format(str(stdout), str(ex)))
+
+    def getDemoCountryCode(self, ticket):
+        if self.__countries is None:
+            self.__countries = [
+                ("CN", "China"),
+                ("US", "United States"),
+                ("AE", "United Arab Emirates"),
+                ("CH", "Switzerland"),
+                ("ES", "Spain"),
+                ("GL", "Greenland"),
+                ("DE", "Germany"),
+                ("PL", "Poland")
+            ]
+        try:
+            ip = int(str(ticket.getIP()).split('.')[-1])
+            if ip <= 10: return self.__countries[0]
+            if ip <= 16: return self.__countries[1]
+            if ip <= 20: return self.__countries[2]
+            if ip <= 24: return self.__countries[3]
+            if ip <= 29: return self.__countries[4]
+            if ip <= 30: return self.__countries[5]
+            if ip <= 35: return self.__countries[6]
+            return self.__countries[7]
+        except Exception as ex:
+            return None, None
