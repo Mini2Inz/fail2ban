@@ -10,7 +10,7 @@ RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
 
 # Install dependencies
 RUN apt-get update && \
-    apt-get install --assume-yes --no-install-recommends python2.7 geoip-bin geoip-database
+    apt-get install --assume-yes --no-install-recommends python2.7 iptables geoip-bin geoip-database
 
 # Install Fail2ban-ng
 COPY . /fail2ban
