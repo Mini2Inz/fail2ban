@@ -8,6 +8,9 @@ CMD ["/sbin/my_init"]
 RUN rm -f /etc/service/sshd/down
 RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
 
+# Set random password
+RUN echo "root:$(tr -dc [:alnum:] < /dev/urandom | head -c32)" | chpasswd
+
 # Install dependencies
 RUN apt-get update && \
     apt-get install --assume-yes --no-install-recommends python2.7 iptables geoip-bin geoip-database
