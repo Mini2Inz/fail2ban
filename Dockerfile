@@ -13,7 +13,12 @@ RUN echo "root:$(tr -dc [:alnum:] < /dev/urandom | head -c32)" | chpasswd
 
 # Install dependencies
 RUN apt-get update && \
-    apt-get install --assume-yes --no-install-recommends python2.7 iptables geoip-bin geoip-database
+    apt-get install --assume-yes --no-install-recommends \
+        python2.7 \
+        netbase \
+        iptables \
+        geoip-bin \
+        geoip-database
 
 # Install Fail2ban-ng
 COPY . /fail2ban
