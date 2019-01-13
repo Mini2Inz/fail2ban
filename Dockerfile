@@ -27,22 +27,23 @@ RUN rm -rf /fail2ban
 
 # Set loglevel to DEBUG and dbpurgeage to 365d
 RUN sed -i \
-        -e 's/^loglevel = .*$/loglevel = DEBUG/' \
-        -e 's/^dbpurgeage = .*$/dbpurgeage = 365d/' \
+        -e 's/^loglevel =.*$/loglevel = DEBUG/' \
+        -e 's/^dbpurgeage =.*$/dbpurgeage = 365d/' \
         /etc/fail2ban/fail2ban.conf
-
-# Set list of hosts
-ARG HOSTS=
-# RUN sed -i "s/^sharehosts =$/sharehosts = $HOSTS/" /etc/fail2ban/fail2ban.conf
-RUN for host in $HOSTS; do echo $host >> /etc/fail2ban/hosts; done
 
 # Enable sshd jail
 RUN bash -c 'echo -e "[sshd]\nenabled = true" >> /etc/fail2ban/jail.local'
 
+# Read hosts from environment variable
+ENV HOSTS=
+
 # Create script to start Fail2ban-ng
 RUN mkdir /etc/service/fail2ban && \
-    bash -c 'echo -e "#!/bin/sh\nfail2ban-server -xf start" > /etc/service/fail2ban/run' && \
-    chmod +x /etc/service/fail2ban/run
+echo '#!/bin/sh\n\
+sed -i "s/^sharehosts =.*$/sharehosts = $HOSTS/" /etc/fail2ban/fail2ban.conf\n\
+fail2ban-server -xf start\n' \
+> /etc/service/fail2ban/run && \
+chmod +x /etc/service/fail2ban/run
 
 # Clean image
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
