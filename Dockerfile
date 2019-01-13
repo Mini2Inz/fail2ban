@@ -25,8 +25,11 @@ COPY . /fail2ban
 RUN cd /fail2ban && python2.7 setup.py install
 RUN rm -rf /fail2ban
 
-# Set loglevel to DEBUG
-RUN sed -i 's/^loglevel = INFO$/loglevel = DEBUG/' /etc/fail2ban/fail2ban.conf
+# Set loglevel to DEBUG and dbpurgeage to 365d
+RUN sed -i \
+        -e 's/^loglevel = .*$/loglevel = DEBUG/' \
+        -e 's/^dbpurgeage = .*$/dbpurgeage = 365d/' \
+        /etc/fail2ban/fail2ban.conf
 
 # Set list of hosts
 ARG HOSTS=
